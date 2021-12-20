@@ -68,7 +68,7 @@ public static class AddressableAssetBuilder
            {
                continue;
            }
-           Debug.Log(bundlePath);
+
            var bundleName = Path.GetFileNameWithoutExtension(bundlePath);
            // uniqueSaltはStream毎にユニークにする必要がある
            // 今回はAssetBundle名を設定

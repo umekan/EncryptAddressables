@@ -6,15 +6,18 @@ public class LoadStarter : MonoBehaviour
 {
     [SerializeField] private RawImage _rawImage;
     
-    private void Start()
+    private void Update()
     {
-        LoadImage();
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoadImage();
+        }
     }
 
     private void LoadImage()
     {
         // UniTask入れてawaitできるようにしような
-        var asset = Addressables.LoadAssetAsync<Texture2D>("Assets/ScreenShot.png");
+        var asset = Addressables.LoadAssetAsync<Texture2D>("Assets/EncryptedTexts/1 1.jpg");
         asset.Completed += op =>
         {
             _rawImage.texture = op.Result;
