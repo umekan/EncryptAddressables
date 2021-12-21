@@ -6,6 +6,9 @@ using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 
+/// <summary>
+/// 暗号化されたAssetBundleからアセットを読み込むProvider
+/// </summary>
 public class CustomAssetBundleResource : IAssetBundleResource
 {
    private AssetBundle assetBundle;
@@ -35,9 +38,33 @@ public class CustomAssetBundleResource : IAssetBundleResource
    public void Fetch()
    {
        var path = provideHandle.ResourceManager.TransformInternalId(provideHandle.Location);
-       if (File.Exists(path) || (Application.platform == RuntimePlatform.Android && path.StartsWith("jar:")))
+       if (File.Exists(path))
        {
            // 暗号化したAssetBundleを取得
+           DecryptAndLoadAssetBundle();
+           return;
+       }
+
+       // ローカルに無い場合にサーバから取ってくる
+       // 暗号化されたAssetBundleを適当なサーバに置いて、普通に取ってくる
+       var uwp = new UnityWebRequest("各々のURL");
+       var handler = new DownloadHandlerFile(path);
+       handler.removeFileOnAbort = true;
+       uwp.downloadHandler = handler;
+       var req = uwp.SendWebRequest();
+       req.completed += _ =>
+       {
+           if (!File.Exists(path)) { return; }
+           
+           // 暗号化したAssetBundleを取得
+           DecryptAndLoadAssetBundle();
+       };
+       
+       
+       // ストレージにあったときも、サーバから落としてきた時も通る処理
+       // 復号して、AssetBundleのメタ情報を返す
+       void DecryptAndLoadAssetBundle()
+       {
            fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
            var bundleName = Path.GetFileNameWithoutExtension(path);
            var uniqueSalt = Encoding.UTF8.GetBytes(bundleName); // AssetBundle名でsaltを生成
@@ -49,10 +76,7 @@ public class CustomAssetBundleResource : IAssetBundleResource
                assetBundle = (op as AssetBundleCreateRequest).assetBundle;
                provideHandle.Complete(this, true, null);
            };
-           return;
        }
-       
-       // ローカルに無い場合にサーバから取ってくる処理をここに書くといいよ
    }
 
    /// <summary>
