@@ -11,6 +11,7 @@ public class LoadStarter : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.L))
         {
             LoadImage();
+            _rawImage.color = Color.cyan;
         }
     }
 
